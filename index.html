@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>XSS Guard | AI-Powered Security</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Outfit:wght@300;400;600&display=swap"
+        rel="stylesheet" />
+    <link rel="icon" type="image/x-icon" href="favicon.webp">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg: #020617;
+            --card-bg: rgba(15, 23, 42, 0.65);
+            --accent: #22d3ee;
+            --accent-glow: rgba(34, 211, 238, 0.3);
+            --text: #f8fafc;
+            --muted: #94a3b8;
+            --ok: #10b981;
+            --bad: #ef4444;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Outfit", sans-serif;
+            color: var(--text);
+            background-color: var(--bg);
+            background-image:
+                radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.05) 1px, transparent 0);
+            background-size: 40px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* Abstract Glows */
+        .glow {
+            position: fixed;
+            width: 400px;
+            height: 400px;
+            background: var(--accent);
+            filter: blur(150px);
+            opacity: 0.15;
+            z-index: -1;
+            border-radius: 50%;
+        }
+
+        .shell {
+            width: min(1000px, 100%);
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .header {
+            padding: 40px 40px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand-h1 {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 2.2rem;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(to right, #fff, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .status-badge {
+            background: rgba(34, 211, 238, 0.1);
+            border: 1px solid var(--accent-glow);
+            padding: 6px 14px;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .content {
+            padding: 40px;
+            display: grid;
+            gap: 24px;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 16px;
+            top: 16px;
+            color: var(--muted);
+        }
+
+        .field {
+            width: 100%;
+            min-height: 200px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            color: white;
+            padding: 16px 16px 16px 48px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.95rem;
+            resize: none;
+        }
+
+        .field:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 12px 20px;
+            border-radius: 14px;
+        }
+
+        .btn-scan {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 12px;
+            font-family: "Space Grotesk", sans-serif;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-scan:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px var(--accent-glow);
+        }
+
+        .btn-scan:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .result-card {
+            margin-top: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 20px;
+            padding: 24px;
+            border: 1px dashed var(--border);
+        }
+
+        .result-label {
+            font-size: 0.8rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .result-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .good {
+            color: var(--ok);
+        }
+
+        .bad {
+            color: var(--bad);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border);
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--muted);
+            text-transform: uppercase;
+        }
+
+        .stat-val {
+            font-family: "Space Grotesk", sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(34, 211, 238, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(34, 211, 238, 0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="glow" style="top: 10%; left: 10%;"></div>
+    <div class="glow" style="bottom: 10%; right: 10%;"></div>
+
+    <main class="shell">
+        <header class="header">
+            <div>
+                <h1 class="brand-h1"><i data-lucide="shield-check"></i> XSS Guard Scanner</h1>
+                <p style="color: var(--muted); margin: 8px 0 0;">Neural Network Analysis (LSTM + Attention)</p>
+            </div>
+            <div class="status-badge">
+                <span class="dot"></span> API: Connected
+            </div>
+        </header>
+
+        <section class="content">
+            <div class="input-group">
+                <i data-lucide="code-2"></i>
+                <textarea id="payloadInput" class="field"
+                    placeholder="Input suspicious payload here... (e.g. <script>fetch('http://attacker.com')</script>)"></textarea>
+            </div>
+
+            <div class="action-bar">
+                <span style="font-size: 0.85rem; color: var(--muted)">
+                    <i data-lucide="info" style="width: 14px; vertical-align: middle"></i>
+                    Press <strong>Ctrl + Enter</strong> to scan
+                </span>
+                <button id="scanBtn" class="btn-scan">
+                    <i data-lucide="search"></i> Run Security Audit
+                </button>
+            </div>
+
+            <div class="result-card">
+                <div class="result-label">Analysis Report</div>
+                <div id="resultContainer" class="result-value">
+                    <i data-lucide="clock" style="color: var(--muted)"></i>
+                    <span id="resultValue" style="color: var(--muted)">Awaiting system input...</span>
+                </div>
+                <p id="errorText" style="color: var(--bad); font-size: 0.85rem; margin-top: 10px;"></p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        const apiEndpoint = "http://localhost:8000/predict";
+        const inputEl = document.getElementById("payloadInput");
+        const scanBtn = document.getElementById("scanBtn");
+        const resultValue = document.getElementById("resultValue");
+        const resultContainer = document.getElementById("resultContainer");
+        const errorText = document.getElementById("errorText");
+
+        async function scanInput() {
+            const val = inputEl.value.trim();
+            if (!val) return;
+
+            // UI Reset
+            errorText.textContent = "";
+            scanBtn.disabled = true;
+            scanBtn.innerHTML = `<i data-lucide="loader-2" class="spin"></i> Analyzing...`;
+            lucide.createIcons();
+
+            resultValue.textContent = "Processing neural layers...";
+
+            try {
+                const response = await fetch(apiEndpoint, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ text: val })
+                });
+
+                const data = await response.json();
+
+                // Destructure all the values from your API
+                const { value, probability, confidence } = data;
+
+                // Logic: Usually value 1 is malicious, 0 is safe
+                const isMalicious = value === 1 || value === "1";
+                const statusClass = isMalicious ? "bad" : "good";
+                const statusIcon = isMalicious ? "alert-triangle" : "check-circle";
+                const statusText = isMalicious ? "Threat Detected" : "Payload Verified Secure";
+
+                // Render the Main Status and the Detailed Stats Grid
+                resultContainer.innerHTML = `
+            <div style="width: 100%">
+                <div class="result-value">
+                    <i data-lucide="${statusIcon}" class="${statusClass}"></i> 
+                    <span class="${statusClass}">${statusText}</span>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">Model Verdict</span>
+                        <span class="stat-val">${isMalicious ? 'Malicious' : 'Clean'}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Malicious Prob.</span>
+                        <span class="stat-val">${(probability * 100).toFixed(2)}%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Confidence</span>
+                        <span class="stat-val">${(confidence * 100).toFixed(2)}%</span>
+                    </div>
+                </div>
+            </div>
+        `;
+
+            } catch (err) {
+                resultContainer.innerHTML = `
+            <i data-lucide="shield-off" style="color: var(--bad)"></i>
+            <span style="color: var(--bad)">System Offline</span>
+        `;
+                errorText.textContent = "Ensure local Flask server is running at :8000";
+            } finally {
+                scanBtn.disabled = false;
+                scanBtn.innerHTML = `<i data-lucide="search"></i> Run Security Audit`;
+                lucide.createIcons();
+            }
+        }
+        scanBtn.addEventListener("click", scanInput);
+        inputEl.addEventListener("keydown", (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === "Enter") scanInput();
+        });
+    </script>
+</body>
+
+</html>
