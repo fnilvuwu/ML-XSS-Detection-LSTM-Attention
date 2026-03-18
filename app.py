@@ -42,12 +42,6 @@ max_len = 800
 def index():
     return send_from_directory("static", "index.html")
 
-
-@app.route("/favicon.ico")
-def favicon():
-    return send_from_directory("static", "favicon.ico")
-
-
 @app.route("/health")
 def health():
     return "ok"
