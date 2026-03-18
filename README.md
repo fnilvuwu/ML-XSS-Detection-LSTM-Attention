@@ -40,3 +40,14 @@ We used their dataset and applied preprocessing steps to clean and format the da
   - Enable Developer Mode
   - Load unpacked (select the Application/Browser Extension folder)
 - Run your extension
+
+## App Preview
+
+<p align="center">
+  <img src="sample/sample-1.png" width="250">
+  <img src="sample/sample-2.png" width="250">
+  <img src="sample/sample-3.png" width="250">
+  <img src="sample/extension-1.png" width="250">
+  <img src="sample/extension-2.png" width="250">
+  <img src="sample/extension-3.png" width="250">
+</p>

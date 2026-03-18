@@ -343,8 +343,8 @@
                 // Destructure all the values from your API
                 const { value, probability, confidence } = data;
 
-                // Logic: Usually value 1 is malicious, 0 is safe
-                const isMalicious = value === 1 || value === "1";
+                // Logic: Check if the value is 'Malicious' or probability > 0.5
+                const isMalicious = value === 'Malicious' || value === 1 || value === "1" || probability > 0.5;
                 const statusClass = isMalicious ? "bad" : "good";
                 const statusIcon = isMalicious ? "alert-triangle" : "check-circle";
                 const statusText = isMalicious ? "Threat Detected" : "Payload Verified Secure";

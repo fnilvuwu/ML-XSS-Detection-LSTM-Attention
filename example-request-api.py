@@ -13,3 +13,9 @@ response = requests.post(url, json=data)
 print(response.status_code)
 print(response.text)
 print(response.json())
+
+data = {"text": "<script>fetch('http://attacker.com')</script>"}
+response = requests.post(url, json=data)
+print(response.status_code)
+print(response.text)
+print(response.json())
